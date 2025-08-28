@@ -74,6 +74,8 @@ jobs:
         with:
           azcliversion: 2.64.0
           inlineScript: |
+            apt-get update
+            apt-get install -y libicu70   # or libicu72 depending on Ubuntu image
             az deployment group create \
               --subscription ${{ env.SUBSCRIPTION-ID }} \
               --resource-group ${{ env.RESOURCE-GROUP }} \
