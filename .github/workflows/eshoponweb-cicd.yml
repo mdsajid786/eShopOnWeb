@@ -68,25 +68,27 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy Bicep template
-        uses: azure/arm-deploy@v2
+      # ✅ Deploy infra using CLI instead of arm-deploy (avoids response bug)
+      - name: Deploy Bicep template with CLI
+        uses: azure/cli@v2
         with:
-          subscriptionId: ${{ env.SUBSCRIPTION-ID }}
-          resourceGroupName: ${{ env.RESOURCE-GROUP }}
-          template: bicep-template/webapp.bicep
-          parameters: >
-            webAppName=${{ env.WEBAPP-NAME }}
-            location=${{ env.LOCATION }}
-          failOnStdErr: false
+          azcliversion: 2.64.0
+          inlineScript: |
+            az deployment group create \
+              --subscription ${{ env.SUBSCRIPTION-ID }} \
+              --resource-group ${{ env.RESOURCE-GROUP }} \
+              --template-file bicep-template/webapp.bicep \
+              --parameters webAppName=${{ env.WEBAPP-NAME }} location=${{ env.LOCATION }}
 
-      # Deploy web app using CLI with fixed az CLI version
+      # ✅ Deploy app to Azure WebApp
       - name: Publish Website to WebApp
-        uses: Azure/cli@v2
+        uses: azure/cli@v2
         with:
-          azcliversion: 2.64.0   # ✅ Pin CLI version to avoid "response consumed" bug
+          azcliversion: 2.64.0
           inlineScript: |
             az webapp deploy \
               --name ${{ env.WEBAPP-NAME }} \
               --resource-group ${{ env.RESOURCE-GROUP }} \
               --src-path .net-app/app.zip \
               --type zip
+
